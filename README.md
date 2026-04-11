@@ -27,7 +27,7 @@ To run this application, you need the following installed on your system:
 
 1. Clone or download this repository.
    ```bash
-   git clone https://github.com/username/ai_meeting_recorder.git
+   git clone https://github.com/YH-Paradise/ai_recorder.git
    cd ai_meeting_recorder
    ```
 
