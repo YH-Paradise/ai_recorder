@@ -1,6 +1,6 @@
 # 🎙️ Local AI Meeting Recorder
 
-![Python](https://img.shields.io/badge/Python-3.8+-blue.svg)
+![Python](https://img.shields.io/badge/Python-3.11+-blue.svg)
 ![PyQt6](https://img.shields.io/badge/PyQt6-GUI-green.svg)
 ![AI](https://img.shields.io/badge/AI-100%25_Local-orange.svg)
 ![Privacy](https://img.shields.io/badge/Privacy-Offline-success.svg)

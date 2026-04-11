@@ -15,7 +15,7 @@ class AudioRecorderThread(QThread):
         self.audio_data = []
 
     def run(self):
-        with sd.InputStream(samplerate=self.fs, channels=1, dtype='float32') as stream:
+        with sd.InputStream(samplerate=self.fs, channels=1, dtype="float32") as stream:
             while self.is_recording:
                 data, overflowed = stream.read(self.fs)
                 self.audio_data.append(data)
