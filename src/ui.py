@@ -94,6 +94,7 @@ class MeetingRecorderApp(QWidget):
         audio_path = self.audio_path_input.text()
         self.recorder_thread = AudioRecorderThread(audio_path)
         self.recorder_thread.finished_signal.connect(self.start_summarization)
+        self.recorder_thread.error_signal.connect(self.on_process_error)
         self.recorder_thread.start()
 
         self.record_btn.setText("Stop Recording & Start Summary")

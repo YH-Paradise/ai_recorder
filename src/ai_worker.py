@@ -66,6 +66,9 @@ class TranscribeSummarizeThread(QThread):
             f.write(text)
 
     def _run_test_mode(self):
-        time.sleep(2)
-        self._save(_DUMMY_SUMMARY)
-        self.summary_ready.emit(self.summary_path)
+        try:
+            time.sleep(2)
+            self._save(_DUMMY_SUMMARY)
+            self.summary_ready.emit(self.summary_path)
+        except Exception as e:
+            self.error_signal.emit(str(e))
