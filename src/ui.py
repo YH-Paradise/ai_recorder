@@ -1,15 +1,21 @@
 import os
 from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout,
-                             QPushButton, QLabel, QLineEdit, QFileDialog, QMessageBox, QGroupBox)
+                             QPushButton, QLabel, QLineEdit, QFileDialog,
+                             QMessageBox, QGroupBox, QComboBox)
 from PyQt6.QtCore import QTimer
 
 from src.audio import AudioRecorderThread
-from src.ai_worker import TranscribeSummarizeThread
+from src.ai_worker import TranscribeSummarizeThread, PROVIDER_LOCAL, PROVIDER_OPENAI, PROVIDER_GEMINI
 
 _BTN_BASE = "height: 50px; font-size: 16px; font-weight: bold; color: white;"
 BTN_STYLE_START = _BTN_BASE + " background-color: #4CAF50;"
 BTN_STYLE_STOP = _BTN_BASE + " background-color: #f44336;"
 BTN_STYLE_DISABLED = "height: 50px; font-size: 16px; background-color: #9e9e9e; color: white;"
+
+_API_KEY_PLACEHOLDER = {
+    PROVIDER_OPENAI: "sk-... (Enter OpenAI API Key)",
+    PROVIDER_GEMINI: "AIza... (Enter Gemini API Key)",
+}
 
 
 class MeetingRecorderApp(QWidget):
@@ -24,19 +30,33 @@ class MeetingRecorderApp(QWidget):
 
     def initUI(self):
         self.setWindowTitle('AI Meeting Recorder')
-        self.resize(450, 350)
+        self.resize(450, 380)
         main_layout = QVBoxLayout()
 
-        # API Key
-        api_group = QGroupBox("OpenAI Settings")
-        api_layout = QHBoxLayout()
+        # AI Provider Settings
+        provider_group = QGroupBox("AI Provider Settings")
+        provider_layout = QVBoxLayout()
+
+        provider_row = QHBoxLayout()
+        self.provider_combo = QComboBox()
+        self.provider_combo.addItems([PROVIDER_LOCAL, PROVIDER_OPENAI, PROVIDER_GEMINI])
+        self.provider_combo.currentTextChanged.connect(self._on_provider_changed)
+        provider_row.addWidget(QLabel("Provider:"))
+        provider_row.addWidget(self.provider_combo)
+
+        self.api_key_widget = QWidget()
+        api_key_row = QHBoxLayout(self.api_key_widget)
+        api_key_row.setContentsMargins(0, 0, 0, 0)
         self.api_input = QLineEdit()
-        self.api_input.setPlaceholderText("sk-... (Enter OpenAI API Key, omit for test mode)")
         self.api_input.setEchoMode(QLineEdit.EchoMode.Password)
-        api_layout.addWidget(QLabel("API Key:"))
-        api_layout.addWidget(self.api_input)
-        api_group.setLayout(api_layout)
-        main_layout.addWidget(api_group)
+        api_key_row.addWidget(QLabel("API Key:"))
+        api_key_row.addWidget(self.api_input)
+        self.api_key_widget.setVisible(False)
+
+        provider_layout.addLayout(provider_row)
+        provider_layout.addWidget(self.api_key_widget)
+        provider_group.setLayout(provider_layout)
+        main_layout.addWidget(provider_group)
 
         # Timer / Status
         self.status_label = QLabel("Ready...", self)
@@ -79,6 +99,12 @@ class MeetingRecorderApp(QWidget):
 
         self.setLayout(main_layout)
 
+    def _on_provider_changed(self, provider):
+        is_local = provider == PROVIDER_LOCAL
+        self.api_key_widget.setVisible(not is_local)
+        if provider in _API_KEY_PLACEHOLDER:
+            self.api_input.setPlaceholderText(_API_KEY_PLACEHOLDER[provider])
+
     def select_save_path(self, line_edit, file_filter):
         path, _ = QFileDialog.getSaveFileName(self, "Select Save Path", line_edit.text(), file_filter)
         if path:
@@ -118,9 +144,10 @@ class MeetingRecorderApp(QWidget):
         self.time_label.setText(f"{mins:02d}:{secs:02d}")
 
     def start_summarization(self, saved_audio_path):
+        provider = self.provider_combo.currentText()
         summary_path = self.summary_path_input.text()
         api_key = self.api_input.text()
-        self.summary_thread = TranscribeSummarizeThread(saved_audio_path, summary_path, api_key)
+        self.summary_thread = TranscribeSummarizeThread(saved_audio_path, summary_path, provider, api_key)
         self.summary_thread.summary_ready.connect(self.on_process_complete)
         self.summary_thread.error_signal.connect(self.on_process_error)
         self.summary_thread.start()
