@@ -3,9 +3,13 @@ from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout,
                              QPushButton, QLabel, QLineEdit, QFileDialog, QMessageBox, QGroupBox)
 from PyQt6.QtCore import QTimer
 
-# Import the separated modules.
 from src.audio import AudioRecorderThread
 from src.ai_worker import TranscribeSummarizeThread
+
+_BTN_BASE = "height: 50px; font-size: 16px; font-weight: bold; color: white;"
+BTN_STYLE_START = _BTN_BASE + " background-color: #4CAF50;"
+BTN_STYLE_STOP = _BTN_BASE + " background-color: #f44336;"
+BTN_STYLE_DISABLED = "height: 50px; font-size: 16px; background-color: #9e9e9e; color: white;"
 
 
 class MeetingRecorderApp(QWidget):
@@ -23,7 +27,7 @@ class MeetingRecorderApp(QWidget):
         self.resize(450, 350)
         main_layout = QVBoxLayout()
 
-        # [API Key Settings Area]
+        # API Key
         api_group = QGroupBox("OpenAI Settings")
         api_layout = QHBoxLayout()
         self.api_input = QLineEdit()
@@ -34,18 +38,17 @@ class MeetingRecorderApp(QWidget):
         api_group.setLayout(api_layout)
         main_layout.addWidget(api_group)
 
-        # [Timer and Status Display Area]
+        # Timer / Status
         self.status_label = QLabel("Ready...", self)
         self.status_label.setStyleSheet("font-size: 16px; font-weight: bold;")
         self.time_label = QLabel("00:00", self)
         self.time_label.setStyleSheet("font-size: 32px; color: #d32f2f; font-weight: bold;")
-
         status_layout = QVBoxLayout()
         status_layout.addWidget(self.status_label)
         status_layout.addWidget(self.time_label)
         main_layout.addLayout(status_layout)
 
-        # [Save Path Settings Area]
+        # Save Paths
         path_group = QGroupBox("Save Path Settings")
         path_layout = QVBoxLayout()
 
@@ -68,9 +71,9 @@ class MeetingRecorderApp(QWidget):
         path_group.setLayout(path_layout)
         main_layout.addWidget(path_group)
 
-        # [Recording Control Button]
+        # Record Button
         self.record_btn = QPushButton("Start Recording", self)
-        self.record_btn.setStyleSheet("height: 50px; font-size: 16px; background-color: #4CAF50; color: white; font-weight: bold;")
+        self.record_btn.setStyleSheet(BTN_STYLE_START)
         self.record_btn.clicked.connect(self.toggle_recording)
         main_layout.addWidget(self.record_btn)
 
@@ -83,25 +86,30 @@ class MeetingRecorderApp(QWidget):
 
     def toggle_recording(self):
         if self.recorder_thread is None or not self.recorder_thread.isRunning():
-            audio_path = self.audio_path_input.text()
-            self.recorder_thread = AudioRecorderThread(audio_path)
-            self.recorder_thread.finished_signal.connect(self.start_summarization)
-
-            self.recorder_thread.start()
-
-            self.record_btn.setText("Stop Recording & Start Summary")
-            self.record_btn.setStyleSheet("height: 50px; font-size: 16px; background-color: #f44336; color: white; font-weight: bold;")
-            self.status_label.setText("🎙️ Recording in progress...")
-            self.seconds_elapsed = 0
-            self.time_label.setText("00:00")
-            self.timer.start(1000)
+            self._start_recording()
         else:
-            self.recorder_thread.stop()
-            self.timer.stop()
-            self.record_btn.setEnabled(False)
-            self.record_btn.setText("Processing AI Summary...")
-            self.record_btn.setStyleSheet("height: 50px; font-size: 16px; background-color: #9e9e9e; color: white;")
-            self.status_label.setText("⚙️ Transcribing & Summarizing...")
+            self._stop_recording()
+
+    def _start_recording(self):
+        audio_path = self.audio_path_input.text()
+        self.recorder_thread = AudioRecorderThread(audio_path)
+        self.recorder_thread.finished_signal.connect(self.start_summarization)
+        self.recorder_thread.start()
+
+        self.record_btn.setText("Stop Recording & Start Summary")
+        self.record_btn.setStyleSheet(BTN_STYLE_STOP)
+        self.status_label.setText("🎙️ Recording in progress...")
+        self.seconds_elapsed = 0
+        self.time_label.setText("00:00")
+        self.timer.start(1000)
+
+    def _stop_recording(self):
+        self.recorder_thread.stop()
+        self.timer.stop()
+        self.record_btn.setEnabled(False)
+        self.record_btn.setText("Processing AI Summary...")
+        self.record_btn.setStyleSheet(BTN_STYLE_DISABLED)
+        self.status_label.setText("⚙️ Transcribing & Summarizing...")
 
     def update_timer(self):
         self.seconds_elapsed += 1
@@ -111,7 +119,6 @@ class MeetingRecorderApp(QWidget):
     def start_summarization(self, saved_audio_path):
         summary_path = self.summary_path_input.text()
         api_key = self.api_input.text()
-
         self.summary_thread = TranscribeSummarizeThread(saved_audio_path, summary_path, api_key)
         self.summary_thread.summary_ready.connect(self.on_process_complete)
         self.summary_thread.error_signal.connect(self.on_process_error)
@@ -128,6 +135,6 @@ class MeetingRecorderApp(QWidget):
     def reset_ui(self):
         self.record_btn.setEnabled(True)
         self.record_btn.setText("Start Recording")
-        self.record_btn.setStyleSheet("height: 50px; font-size: 16px; background-color: #4CAF50; color: white; font-weight: bold;")
+        self.record_btn.setStyleSheet(BTN_STYLE_START)
         self.status_label.setText("Ready...")
         self.time_label.setText("00:00")
