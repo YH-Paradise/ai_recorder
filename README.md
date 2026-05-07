@@ -2,81 +2,88 @@
 
 ![Python](https://img.shields.io/badge/Python-3.11+-blue.svg)
 ![PyQt6](https://img.shields.io/badge/PyQt6-GUI-green.svg)
-![AI](https://img.shields.io/badge/AI-100%25_Local-orange.svg)
-![Privacy](https://img.shields.io/badge/Privacy-Offline-success.svg)
+![AI](https://img.shields.io/badge/AI-Local%20%7C%20OpenAI%20%7C%20Gemini-orange.svg)
+![Privacy](https://img.shields.io/badge/Privacy-Offline_Ready-success.svg)
 
-A desktop application that automatically records audio, transcribes speech to text (STT), and summarizes meeting notes (LLM) **100% locally on your PC without needing an internet connection or paid APIs.**
-
-Perfect for summarizing sensitive internal meetings or personal brainstorming sessions securely without sending data to external servers.
+A desktop application that records audio, transcribes speech to text, and summarizes meeting notes using your choice of AI provider — fully local with no API key, or powered by OpenAI/Gemini with your own key.
 
 ## ✨ Key Features
 
-- **One-Click Recording**: Intuitive GUI built with PyQt6 for easy audio recording and file management.
-- **100% Local STT**: Utilizes `faster-whisper` for fast and highly accurate offline speech-to-text conversion.
-- **100% Local LLM**: Powered by `Ollama` and open-source models (e.g., Llama 3.1) to automatically summarize the core topics, discussion points, and action items.
-- **Multi-threading (QThread)**: Ensures the UI remains responsive and smooth even during heavy AI inference tasks.
+- **Provider Selection**: Choose between **Local (Ollama)**, **OpenAI**, or **Gemini** from a dropdown — switch anytime without restarting.
+- **100% Local Mode**: Uses `faster-whisper` for offline STT and `Ollama` (Llama 3.1) for summarization. No internet or API key required.
+- **Cloud Mode**: Plug in your OpenAI or Gemini API key for higher accuracy transcription and summarization.
+- **Non-blocking UI**: Heavy AI tasks run on background QThreads so the interface stays responsive throughout.
 
-## ⚙️ Prerequisites
+## 📦 Download (macOS — No Installation Required)
 
-To run this application, you need the following installed on your system:
+Download the pre-built app from the [Releases page](https://github.com/YH-Paradise/ai_recorder/releases):
 
-1. **Python 3.11+**
-2. **Ollama**: Required to run the local LLM. ([Download from the official website](https://ollama.com/))
+1. Download `AI_Meeting_Recorder_macOS.zip`
+2. Unzip and move `AI_Meeting_Recorder.app` to your Applications folder
+3. On first launch: right-click → **Open** (bypasses Gatekeeper for unsigned apps)
 
-## 🚀 Installation
+> **Apple Silicon (arm64) only.** Intel Mac support is not included in this build.
 
-1. Clone or download this repository.
-   ```bash
-   git clone https://github.com/YH-Paradise/ai_recorder.git
-   cd ai_meeting_recorder
-   ```
+## ⚙️ Environment Requirements
 
-2. (Optional but recommended) Create and activate a virtual environment.
-   ```bash
-   python -m venv venv
-   # Windows
-   venv\Scripts\activate
-   # macOS/Linux
-   source venv/bin/activate
-   ```
+### All Modes
+- macOS 11.0+ (Apple Silicon recommended)
+- Microphone access permission
 
-3. Install the required Python packages.
-   ```bash
-   pip install PyQt6 sounddevice soundfile numpy faster-whisper openai
-   ```
+### Local (Ollama) Mode
+- [Ollama](https://ollama.com/) installed and running
+- Llama 3.1 model pulled:
+  ```bash
+  ollama run llama3.1
+  # Once the >>> prompt appears, type /bye to exit
+  # Ollama must keep running in the background
+  ```
+- ~16GB RAM recommended
+- First run auto-downloads the Whisper `base` model (~145MB)
 
-4. Download the AI model for summarization via Ollama (First time only).
-   ```bash
-   ollama run llama3.1
-   ```
-   *(Once the download is complete and the `>>>` prompt appears, type `/bye` to exit. Ollama must remain running in the background.)*
+### OpenAI Mode
+- OpenAI API key (`sk-...`)
+
+### Gemini Mode
+- Google AI API key (`AIza...`) from [Google AI Studio](https://aistudio.google.com/)
+
+## 🚀 Running from Source
+
+```bash
+# Clone
+git clone https://github.com/YH-Paradise/ai_recorder.git
+cd ai_recorder
+
+# Create and activate conda environment
+conda create -n ai_recorder python=3.11
+conda activate ai_recorder
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Run
+python main.py
+```
 
 ## 💻 Usage
 
-1. Run the main script from the root directory.
-   ```bash
-   python main.py
-   ```
-2. When the UI appears, set the **Audio Path** and **Summary Path** (or leave them as default).
-3. Click **[Start Recording]** to begin recording your meeting.
-4. When finished, click **[Stop & Summarize]**.
-5. The AI will process the audio in the background. Once completed, a pop-up will notify you, and the summary will be saved to the specified path.
-
-## 📂 Project Structure
-
-```text
-ai_meeting_recorder/
-├── .gitignore
-├── README.md
-└── main.py                # Main application script (UI, Audio, AI logic combined)
-```
+1. Launch the app
+2. Select your **AI Provider** from the dropdown
+3. Enter your API key if using OpenAI or Gemini (hidden for Local mode)
+4. Set **Audio Path** and **Summary Path** (defaults are fine)
+5. Click **[Start Recording]**
+6. Click **[Stop Recording & Start Summary]** when done
+7. A dialog will appear when the summary is saved
 
 ## ⚠️ Troubleshooting
 
-- **First-Run Delay**: The first time you run the app, `faster-whisper` will automatically download its base model (~150MB), which may take a few moments. Subsequent runs will be immediate.
-- **Memory (RAM) Requirements**: Since the AI models run locally, a system with at least 16GB of RAM is highly recommended.
-- **Microphone Access**: If you encounter an audio recording error, ensure that Python has permission to access your microphone in your OS settings.
+| Issue | Solution |
+|---|---|
+| First-run delay (Local mode) | Whisper base model downloads on first use (~145MB) — wait a moment |
+| Ollama error | Make sure `ollama serve` is running before starting Local mode |
+| Microphone error | Grant Python/app microphone access in System Settings → Privacy |
+| "App is damaged" warning | Right-click → Open, or run `xattr -cr AI_Meeting_Recorder.app` in Terminal |
 
 ## 📄 License
 
-This project is licensed under the MIT License. Feel free to modify and distribute!
+MIT License — free to modify and distribute.
